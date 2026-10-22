@@ -1,0 +1,4 @@
+```Brute Force / Account Lockout - MITRE ATT&CK T1110.001```
+```4740 = account locked out after exceeding the domain lockout threshold (5 attempts).```
+index=wineventlog EventCode=4740
+| table _time user Caller_Computer_Name

@@ -1,0 +1,51 @@
+<dashboard version="1.1" theme="light">
+  <label>AD Identity Attacks</label>
+  <description>Detections for password spraying, brute force lockouts, and privileged group changes in lab.local</description>
+  <row>
+    <panel>
+      <title>Password Spray (T1110.003)</title>
+      <table>
+        <search>
+          <query><![CDATA[index=wineventlog EventCode IN (4771,4776,4625)
+| search NOT (EventCode=4776 Error_Code="0x0")
+| eval acct=coalesce(user, Logon_Account, Account_Name)
+| bin _time span=5m
+| stats dc(acct) AS accounts_targeted count BY _time
+| where accounts_targeted >= 10]]></query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Account Lockout - Brute Force (T1110.001)</title>
+      <table>
+        <search>
+          <query><![CDATA[index=wineventlog EventCode=4740
+| table _time user Caller_Computer_Name]]></query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Privileged Group Change (T1098)</title>
+      <table>
+        <search>
+          <query><![CDATA[index=wineventlog EventCode IN (4728,4732,4756) Group_Name IN ("Domain Admins","Enterprise Admins","Administrators","Schema Admins") src_user!="ANONYMOUS LOGON"
+| table _time EventCode src_user user Group_Name
+| rename src_user AS "Changed By", user AS "Account Added", Group_Name AS "Privileged Group"]]></query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
